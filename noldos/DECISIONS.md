@@ -1,0 +1,1 @@
+I added the flag for whether it supports a critical or important function to the constructor. This is done as the flag is an inherent and important property of the contract. When using a setter, you might risk the chance of forgetting to set the contract to the right flag. This is not possible now as an object can't be created without the flag.

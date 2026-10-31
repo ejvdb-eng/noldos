@@ -14,18 +14,28 @@ public class Contract {
     private final String providerName;
     private final List<Clause> listOfClauses;
     private final Map<String, Set<Requirement>> tagMap;
+    private final String flag;
     
-    public Contract(String name){
+    public Contract(String name, String criticalorimportant){
         if(name == null || name.isBlank()){
             throw new IllegalArgumentException("Name not correctly filled in");
         }
         this.providerName = name;
+        this.flag = criticalorimportant;
         this.listOfClauses = new ArrayList<>();
         this.tagMap = new HashMap<>();
     }
 
     public List<Clause> getClauses(){
         return List.copyOf(listOfClauses);
+    }
+
+    public String getFlag(){
+        return flag;
+    }
+
+    public String getName(){
+        return providerName;
     }
 
     public void addClause(String number, String text){
