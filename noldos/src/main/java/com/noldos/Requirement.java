@@ -39,7 +39,7 @@ public enum Requirement {
         service level descriptions, including updates and revisions thereof;""",
         Scope.ALL_CONTRACTS
     ),
-    PROVIDE_FINANCIAL_ASSISTENCE(
+    PROVIDE_ASSISTANCE_INCIDENT(
         "Art. 30(2)(f)",
         """
         the obligation of the ICT third-party service provider to provide assistance to the financial entity at no additional cost,
@@ -63,13 +63,13 @@ public enum Requirement {
         Scope.ALL_CONTRACTS
     ),
     CONDITION_FOR_PARTICIPATION(
-        "Art. 30 (2)(i)",
+        "Art. 30(2)(i)",
         """
         the conditions for the participation of ICT third-party service providers in the financial entities' ICT security awareness
         programmes and digital operational resilience training in accordance with Article 13(6);""",
         Scope.ALL_CONTRACTS
     ),
-    SERVICE_LEVEL_DESCRIPTIONS(
+    SERVICE_LEVEL_DESCRIPTIONS_WHEN_UNMET(
         "Art. 30(3)(a)",
         """
         full service level descriptions, including updates and revisions thereof with precise quantitative and qualitative

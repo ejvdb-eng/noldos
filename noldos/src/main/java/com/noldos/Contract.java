@@ -14,9 +14,9 @@ public class Contract {
     private final String providerName;
     private final List<Clause> listOfClauses;
     private final Map<String, Set<Requirement>> tagMap;
-    private final String flag;
+    private final boolean flag;
     
-    public Contract(String name, String criticalorimportant){
+    public Contract(String name, boolean criticalorimportant){
         if(name == null || name.isBlank()){
             throw new IllegalArgumentException("Name not correctly filled in");
         }
@@ -30,7 +30,7 @@ public class Contract {
         return List.copyOf(listOfClauses);
     }
 
-    public String getFlag(){
+    public boolean getFlag(){
         return flag;
     }
 
@@ -67,22 +67,27 @@ public class Contract {
     }
 
     public Set<Requirement> missingRequirements(){
-        Set<Requirement> notaggedclause = EnumSet.allOf(Requirement.class);
-        
+        Set<Requirement> applicableRequirements = EnumSet.allOf(Requirement.class).stream()
+                .filter(req -> this.flag || req.getScope() != Scope.CRITICAL_OR_IMPORTANT)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(Requirement.class)));
         for(String value : tagMap.keySet()){
             Set<Requirement> reqset = tagMap.get(value);
             for(Requirement req : reqset){
-               notaggedclause.remove(req);
+               applicableRequirements.remove(req);
             }
         }
-        return notaggedclause;
+        return applicableRequirements;
     }
 
     @Override
     public String toString(){
-        int coveredReq = Requirement.values().length - missingRequirements().size();
+        long totalApplicableReqs = java.util.Arrays.stream(Requirement.values())
+            .filter(req -> this.flag || req.getScope() != Scope.CRITICAL_OR_IMPORTANT)
+            .count();
 
-        String line1 = providerName + ": " + listOfClauses.size() + " clauses, " + coveredReq + " of 4 requirements covered";
+        int coveredReq = (int) totalApplicableReqs - missingRequirements().size();
+
+        String line1 = providerName + ": " + listOfClauses.size() + " clauses, " + coveredReq + " of " + Requirement.values().length + " requirements covered";
         String text = missingRequirements().stream()
                 .map(item -> item.getReference() + " " +item.name().toLowerCase().replace('_',' '))
                 .collect(Collectors.joining(", "));
