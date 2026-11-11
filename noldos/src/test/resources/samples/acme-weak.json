@@ -1,0 +1,8 @@
+{
+  "provider": "Acme Cloud",
+  "criticalOrImportant": false,
+  "clauses": [
+    { "number": "1", "text": "The provider delivers a hosted data platform.", "covers": ["SERVICE_DESCRIPTION"] },
+    { "number": "7", "text": "Either party may terminate immediately at any time without notice.", "covers": ["TERMINATION_RIGHTS"] }
+  ]
+}

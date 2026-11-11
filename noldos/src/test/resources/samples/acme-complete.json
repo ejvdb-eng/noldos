@@ -1,0 +1,8 @@
+{
+  "provider": "Acme Cloud",
+  "criticalOrImportant": false,
+  "clauses": [
+    { "number": "1", "text": "The provider delivers a hosted data platform.", "covers": ["SERVICE_DESCRIPTION"] },
+    { "number": "7", "text": "Either party may terminate with 90 days written notice.", "covers": ["TERMINATION_RIGHTS"] }
+  ]
+}

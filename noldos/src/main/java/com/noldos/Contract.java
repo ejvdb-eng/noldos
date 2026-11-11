@@ -16,12 +16,12 @@ public class Contract {
     private final Map<String, Set<Requirement>> tagMap;
     private final boolean flag;
     
-    public Contract(String name, boolean criticalorimportant){
-        if(name == null || name.isBlank()){
+    public Contract(String providerName, boolean iscriticalorimportant){
+        if(providerName == null || providerName.isBlank()){
             throw new IllegalArgumentException("Name not correctly filled in");
         }
-        this.providerName = name;
-        this.flag = criticalorimportant;
+        this.providerName = providerName;
+        this.flag = iscriticalorimportant;
         this.listOfClauses = new ArrayList<>();
         this.tagMap = new HashMap<>();
     }
@@ -87,7 +87,7 @@ public class Contract {
 
         int coveredReq = (int) totalApplicableReqs - missingRequirements().size();
 
-        String line1 = providerName + ": " + listOfClauses.size() + " clauses, " + coveredReq + " of " + Requirement.values().length + " requirements covered";
+        String line1 = providerName + ": " + listOfClauses.size() + " clauses, " + coveredReq + " of " + totalApplicableReqs + " requirements covered";
         String text = missingRequirements().stream()
                 .map(item -> item.getReference() + " " +item.name().toLowerCase().replace('_',' '))
                 .collect(Collectors.joining(", "));

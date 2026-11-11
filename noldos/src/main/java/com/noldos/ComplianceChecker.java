@@ -2,6 +2,8 @@ package com.noldos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ComplianceChecker {
 
@@ -32,6 +34,11 @@ public class ComplianceChecker {
             }
         }
         return new ComplianceChecker(ruleList);
+    }
+
+    static Map<Status, Long> summarize(List<Finding> findings){
+        return findings.stream()
+                .collect(Collectors.groupingBy(Finding::status,Collectors.counting()));
     }
     
 }
