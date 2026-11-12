@@ -1,6 +1,7 @@
 package com.noldos;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -27,6 +28,54 @@ public class ContractLoaderTest {
         assertTrue(text.contains("non-existent.json"));
     }
 
+    @Test //Use IOException when using Files.writeString
+    public void unrecognizedKeyTest(@TempDir Path tempDir) throws IOException {
+        Path file = tempDir.resolve("test-json");
+        Files.writeString(file, """
+                {
+            "provider": "Acme",
+            "claus": []
+            }
+            """);
+
+        ContractLoader loader = new ContractLoader();
+        ContractLoadException ex = assertThrows(ContractLoadException.class, () -> {
+        loader.load(file);
+        });
+        assertTrue(ex.getMessage().contains("claus"));
+    }
+
+    @Test
+    public void missingProviderTest(@TempDir Path tempDir) throws IOException{
+        Path file = tempDir.resolve("test-json");
+        Files.writeString(file, """
+                {
+            
+            "clauses": []
+            }
+            """);
+            ContractLoader loader = new ContractLoader();
+        ContractLoadException ex = assertThrows(ContractLoadException.class, () -> {
+        loader.load(file);
+        });
+        assertTrue(ex.getMessage().contains("missing provider"));
+    }
+
+    @Test
+    public void missingclausesTest(@TempDir Path tempDir) throws IOException{
+        Path file = tempDir.resolve("test-json");
+        Files.writeString(file, """
+                {
+            "provider": "Acme"
+            }
+            """);
+            ContractLoader loader = new ContractLoader();
+        ContractLoadException ex = assertThrows(ContractLoadException.class, () -> {
+        loader.load(file);
+        });
+        assertTrue(ex.getMessage().contains("missing clauses"));
+    }
+            
     /*The method Files.writeString() can throw a IOException (input/output exception) 
     if something goes wrong. But you have to write this in the method header throws Exception*/
     @Test
@@ -50,7 +99,7 @@ public class ContractLoaderTest {
         {
         "provider": "Acme Test",
         "criticalOrImportant": false,
-        "listOfLooseClauses": [
+        "clauses": [
         { "number": " ", "text": "Blank number test", "covers": ["SERVICE_DESCRIPTION"] }
     ]
     }
@@ -71,7 +120,7 @@ public class ContractLoaderTest {
         {
         "provider": "Acme Test",
         "criticalOrImportant": false,
-        "listOfLooseClauses": [
+        "clauses": [
         { "number": "1", "text": "First clause", "covers": ["SERVICE_DESCRIPTION"] },
         { "number": "1", "text": "Second clause with duplicate number", "covers": ["DATA_LOCATIONS"]}
     ]
@@ -86,44 +135,54 @@ public class ContractLoaderTest {
     }
 
     @Test
-    public void unknownRequirementName(@TempDir Path tempDir) throws Exception{
-        Path path = tempDir.resolve("blank-number.json");
-        ContractLoader contractloader = new ContractLoader();
-        String jsonContent = """
-        {
-        "provider": "Acme Test",
-        "criticalOrImportant": false,
-        "listOfLooseClauses": [
-        { "number": "1", "text": "Blank number test", "covers": ["TYPO_IN_TAG"] }
-    ]
+    public void unknownRequirementNameTest(@TempDir Path tempDir) throws Exception {
+    Path path = tempDir.resolve("unknown-req.json");
+    // Let op: een geldig clausulenummer ("1"), zodat we alléén de foutieve tag testen!
+    String jsonContent = """
+    {
+      "provider": "Acme Test",
+      "criticalOrImportant": false,
+      "clauses": [
+        { "number": "1", "text": "Valid clause number", "covers": ["TERMINATION_RIGHT"] }
+      ]
     }
     """;
-        Files.writeString(path, jsonContent);
-        ContractLoadException exception = assertThrows(ContractLoadException.class, () -> {
+    Files.writeString(path, jsonContent);
+
+    ContractLoader contractloader = new ContractLoader();
+    ContractLoadException exception = assertThrows(ContractLoadException.class, () -> {
         contractloader.load(path);
-        });
-        String text = exception.getMessage();
-        assertTrue(text.contains("unknown requirement name"));
+    });
+
+    String text = exception.getMessage();
+    assertTrue(text.contains("unknown requirement name"));
+    assertTrue(text.contains("TERMINATION_RIGHT"));
     }
 
-    @Test 
-    public void validLoadTest(@TempDir Path tempDir) throws Exception{
-        Path path = tempDir.resolve("blank-number.json");
-        String jsonContent = """
-                {
-        "provider": "Acme Cloud",
-        "criticalOrImportant": false,
-        "listOfLooseClauses": [
-        { "number": "1", "text": "The provider delivers a hosted data platform.", "covers": ["SERVICE_DESCRIPTION"] },
-        { "number": "7", "text": "Either party may terminate with 90 days written notice.", "covers": ["TERMINATION_RIGHTS"] }
-        ]
-        }
-        """; 
-        Files.writeString(path, jsonContent);
-        ContractLoader contractloader = new ContractLoader();
-          
-        TotalContract contract = contractloader.load(path);
-        assertEquals("Acme Cloud",contract.provider());
+    @Test
+    public void validLoadTest(@TempDir Path tempDir) throws Exception {
+    Path path = tempDir.resolve("valid.json");
+    String jsonContent = """
+    {
+      "provider": "Acme Cloud",
+      "criticalOrImportant": true,
+      "clauses": [
+        { "number": "1", "text": "Hosted platform", "covers": ["SERVICE_DESCRIPTION"] },
+        { "number": "7", "text": "90 days notice", "covers": ["DATA_LOCATIONS"] }
+      ]
+    }
+    """;
+    Files.writeString(path, jsonContent);
+
+    ContractLoader contractloader = new ContractLoader();
+    TotalContract contract = contractloader.load(path);
+
+    // Controleer nu alle eigenschappen: provider, vlag, aantal clausules en de tags
+    assertEquals("Acme Cloud", contract.provider());
+    assertTrue(contract.criticalOrImportant());
+    assertEquals(2, contract.clauses().size());
+    assertEquals(List.of(Requirement.SERVICE_DESCRIPTION), contract.clauses().get(0).covers());
+    assertEquals(List.of(Requirement.DATA_LOCATIONS), contract.clauses().get(1).covers());
     }
 
     @Test 
@@ -134,7 +193,7 @@ public class ContractLoaderTest {
     {
       "provider": "Acme Cloud",
       "criticalOrImportant": false,
-      "clauses": [
+      "claus": [
         { "number": "1", "text": "The provider delivers a hosted data platform.", "covers": ["SERVICE_DESCRIPTION"] },
         { "number": "7", "text": "Either party may terminate immediately at any time without notice.", "covers": ["DATA_LOCATIONS"] }
       ]
@@ -160,7 +219,7 @@ public class ContractLoaderTest {
     {
       "provider": "Acme Cloud",
       "criticalOrImportant": false,
-      "listOfLooseClauses": [
+      "clauses": [
         { "number": "1", "text": "The provider delivers a hosted data platform.", "covers": ["SERVICE_DESCRIPTION"] },
         { "number": "7", "text": "Either party may terminate immediately at any time without notice.", "covers": ["DATA_LOCATIONS"] }
       ]
@@ -189,6 +248,26 @@ public class ContractLoaderTest {
                            "Total findings: 1";
     
     assertEquals(expectedReport, result);
+    }
+
+    @Test
+    public void invalidBooleanTypeTest(@TempDir Path tempDir) throws Exception {
+    Path path = tempDir.resolve("banana-boolean.json");
+    String jsonContent = """
+    {
+      "provider": "Acme Cloud",
+      "criticalOrImportant": "banana",
+      "listOfLooseClauses": []
+    }
+    """;
+    Files.writeString(path, jsonContent);
+
+    ContractLoader contractloader = new ContractLoader();
+    ContractLoadException exception = assertThrows(ContractLoadException.class, () -> {
+        contractloader.load(path);
+    });
+
+    assertTrue(exception.getMessage().contains("banana"));
     }
 
     

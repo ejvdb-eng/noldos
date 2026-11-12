@@ -31,14 +31,14 @@ public class ContractLoader {
         /*Reads the raw text inside your JSON file and maps each JSON key (like "provider") to the corresponding 
          field in your Java Record structure (TotalContract)*/
 
-        if(contract.listOfLooseClauses() == null){
-            throw new ContractLoadException(fileName, "invalid JSON");
+        if(contract.clauses() == null){
+            throw new ContractLoadException(fileName, "missing clauses");
         }
         if(contract.provider() == null || contract.provider().isBlank()){
-            throw new ContractLoadException(fileName, "invalid JSON");
+            throw new ContractLoadException(fileName, "missing provider");
         }
 
-        List<LooseClause> allClauses = contract.listOfLooseClauses();
+        List<LooseClause> allClauses = contract.clauses();
         Set<String> seenNumbers = new HashSet<>();
 
         for(LooseClause clause : allClauses){
@@ -74,6 +74,5 @@ public class ContractLoader {
             // Overige algemene I/O of mapping fouten
             throw new ContractLoadException(fileName, "invalid JSON", e);
         }
-
     }
 }
